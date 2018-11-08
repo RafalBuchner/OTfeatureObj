@@ -225,3 +225,16 @@ def getFeaturesAndLookups(feaList):
 	return feaElements
 
 
+currDir = os.path.dirname(os.path.abspath(__file__))
+feaPath = currDir + "/supersimple.fea"
+feaList = stripFea(feaPath)
+
+openingEl = "{"
+# closingEl = "}"
+feaElements = getFeaturesAndLookups(feaList)
+for i in feaElements:
+	# print(i)
+	print(i)
+	print()
+	# for j in i["elements"]:
+	# 	print(">>>> ",j)
