@@ -148,9 +148,9 @@ def findNestedPairs(feaList, openingEl, closingEl):
 
 def getFeaturesAndLookups(feaList):
     """
-            TODO:
-            elements zastąb następującymi kategoriami:
-            rules, lookup declarations, lookup calls
+                    TODO:
+                    elements zastąb następującymi kategoriami:
+                    rules, lookup declarations, lookup calls
     """
     openingEl, closingEl = ("{", "}")
     pairDict = findNestedPairs(feaList, openingEl, closingEl)
@@ -227,10 +227,21 @@ def getFeaturesAndLookups(feaList):
 
 
 def getBlocks(feaList):
-	##########
-	# BLOCKS #
-	##########
-
+    def _getCorrespondingBraceIndex(indexOfBrace, braceDict):
+        closing_index = None
+        search_pairIndex, search_isOpening, search_deepLeve = (
+            None, None, None)
+        for index in braceDict:
+            pairIndex, isOpening, deepLevel = braceDict[index]
+            if index == indexOfBrace:
+                search_pairIndex, search_isOpening, search_deepLevel = braceDict[
+                    index]
+            if pairIndex == search_pairIndex and isOpening != search_isOpening and deepLevel == search_deepLevel:
+                closing_index = index
+        return closing_index
+    ##########
+    # BLOCKS #
+    ##########
     # creating the dictionary of feaList items, with indexes as a key.
     # It will be useful in deleting by orginal index
     indexed_feaDict = {}
@@ -241,6 +252,7 @@ def getBlocks(feaList):
     nestedPairs = findNestedPairs(feaList, openingEl, closingEl)
 
     blocks = []
+
     block_index = 0
     for i in indexed_feaDict:
         element = indexed_feaDict[i]
@@ -248,28 +260,22 @@ def getBlocks(feaList):
         if element == openingEl:
             block_descrpition = {}
             opening_Index = i
-            closing_index = None
-            search_pairIndex, search_isOpening, search_deepLevel = (None, None, None)
-            for index in nestedPairs:
-                pairIndex, isOpening, deepLevel = nestedPairs[index]
-                if index == i:
-                    search_pairIndex, search_isOpening, search_deepLevel = nestedPairs[
-                        index]
-
-                if pairIndex == search_pairIndex and isOpening != search_isOpening and deepLevel == search_deepLevel:
-                    closing_index = index
+            closing_index = _getCorrespondingBraceIndex(i, nestedPairs)
             block_descrpition["type"] = f"{feaList[i - 2]}-block"
             block_descrpition["name"] = feaList[i - 1]
-            block_descrpition["deepLevel"] = search_deepLevel
+            block_descrpition["deepLevel"] = nestedPairs[i][2]
             block_descrpition["index"] = block_index
-            block_descrpition["feaList_index_range"] = (opening_Index - 2, closing_index + 2) # range of global indexes
-            block_descrpition["content"] = feaList[opening_Index + 1:closing_index]
+            block_descrpition["feaList_index_range"] = (
+                opening_Index - 2, closing_index + 3)  # range of global indexes
+            block_descrpition["content"] = feaList[
+                opening_Index + 1:closing_index]
             blocks.append(block_descrpition)
 
     # deleting the blocks from indexed_feaDict
     indexed_feaDict_wthout_blocks = copy.deepcopy(indexed_feaDict)
     blocks_0_deep = []
     index_0_deep = 0
+
     for block in blocks:
         start_Index, end_index = block["feaList_index_range"]
         indexes_to_remove = []
@@ -280,17 +286,86 @@ def getBlocks(feaList):
         for i in indexes_to_remove:
             indexed_feaDict_wthout_blocks.pop(i)
 
+        # getting read of deeper levels
+        # deeper levels are still stored in blocks list
+        # Later if I would like to check if there are deepere layers revursiveley
+        # I will use block list.
         if block["deepLevel"] == 0:
-        	block["index"] = index_0_deep
-        	blocks_0_deep.append(block)
-        	index_0_deep += 1
+            block["index"] = index_0_deep
+            blocks_0_deep.append(block)
+            index_0_deep += 1
 
     ###################################################
-	# classes declaration/classes without declaration #
-	###################################################
-    print(indexed_feaDict_wthout_blocks.values())
-    for b in blocks_0_deep: ###test
-    	print(b["type"],b["index"],b["name"]) ###test
+    # classes declaration/classes without declaration #
+    ###################################################
+    # print(indexed_feaDict_wthout_blocks.values())
+    openingEl, closingEl = ("[", "]")
+    bracketPairs = findNestedPairs(feaList, openingEl, closingEl)
+    declaredclasses = []
+    subRules = []
+    for i in indexed_feaDict_wthout_blocks:
+        element = indexed_feaDict_wthout_blocks[i]
+
+        # DECLARED CLASSES
+        if element == openingEl:
+            # Declartation
+            if indexed_feaDict_wthout_blocks[i - 1] == "=":
+                opening_Index = i
+                closing_index = _getCorrespondingBraceIndex(i, bracketPairs)
+                classDeclaration = {}
+                classDeclaration["type"] = "declared-class"
+                classDeclaration["name"] = indexed_feaDict_wthout_blocks[i - 2]
+                classDeclaration["content"] = feaList[
+                    opening_Index + 1:closing_index]
+                classDeclaration["feaList_index_range"] = (
+                    i - 2, closing_index + 2)
+                declaredclasses.append(classDeclaration)
+
+        #########
+        # RULES #
+        #########
+        if element == "sub":
+            sub_operator_index = None
+            opening_Index = i
+            closing_index = None
+
+            # searching for closing index
+            for j in indexed_feaDict_wthout_blocks:
+                if j > i:
+                    if indexed_feaDict_wthout_blocks[j] == ";":
+                        closing_index = j + 1
+                        break
+
+            temp_ruleElements = feaList[opening_Index:closing_index]
+            temp_ruleElements.pop(0)
+            temp_ruleElements.pop(-1)
+
+            for subOperator in ("by", "from"):
+                if subOperator in temp_ruleElements:
+                    sub_operator_index = temp_ruleElements.index(subOperator)
+
+            subRule = {}
+            subRule["type"] = "sub-rule"
+            subRule["targets"] = temp_ruleElements[:sub_operator_index]
+            subRule["replacements"] = temp_ruleElements[sub_operator_index + 1:]
+            subRule["feaList_index_range"] = (opening_Index, closing_index)
+            subRules.append(subRule)
+            print(feaList[subRule["feaList_index_range"][0]:subRule["feaList_index_range"][1]])
+            """
+                UWAGA!!!!
+                teraz będziesz musiał popracować nad interpretacją 
+                elementów replacements oraz targets w subRule:
+                moja propozycja jest taka, aby na tym etapie nie podmieniać klas. 
+                TO powinno być robione z poziomu kodu obiektowego.
+                PRZECZYTAJ JESZCZE JAK TO DZIAŁA W OPENtYPECOOKBOOK!!!!
+                SPRAWDZ PRZYKŁADY CO NA CO MOŻNA WYMIENIAĆ!!!
+            """
+        elif element == "pos":
+            posRule = {}
+            posRule["type"] = "pos-rule"
+
+    for b in blocks_0_deep:  # test
+        print(b["type"], b["deepLevel"], b["name"])  # test
 
     return blocks
 
@@ -306,8 +381,8 @@ findNestedPairs(feaList, "{", "}")
 bl = getBlocks(feaList)
 
 # for n in bl:
-#     for m in n:
-#         print(n[m])
+#	 for m in n:
+#		 print(n[m])
 
 
 # openingEl = "{"

@@ -11,9 +11,17 @@ languagesystem latn dflt;
 @punctuation         = [exclam];
 @punctuationSmallcap = [exclam.sc];
 
+sub @a by @a1;
+sub @b by @b1;
+sub @c by @c1;
+
 feature smcp {
     sub @lowercase by @smallcaps;
 } smcp;
+
+sub @d by @d1;
+sub @e by @e1;
+sub [a b c] by [a.alt b.alt c.alt];
 
 feature c2sc {
     lookup Uppercase {
