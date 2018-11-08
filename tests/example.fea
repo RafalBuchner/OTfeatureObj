@@ -1,0 +1,29 @@
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+@lowercase = [a    b    c];
+@uppercase = [A    B    C];
+@smallcaps = [A.sc B.sc C.sc];
+
+@figures         = [zero    one    two];
+@figuresSmallcap = [zero.sc one.sc two.sc];
+
+@punctuation         = [exclam];
+@punctuationSmallcap = [exclam.sc];
+
+feature smcp {
+    sub @lowercase by @smallcaps;
+} smcp;
+
+feature c2sc {
+    lookup Uppercase {
+        sub @uppercase by @smallcaps;
+    } Uppercase;
+
+    lookup Lowercase {
+        sub @lowercase by @smallcaps;
+    } Lowercase;
+
+    sub @figures by @figuresSmallcap;
+    sub @punctuation by @punctuationSmallcap;
+} c2sc;

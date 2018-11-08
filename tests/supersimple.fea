@@ -1,0 +1,13 @@
+feature smcp {
+    sub @lowercase by @smallcaps;
+} smcp;
+
+feature c2sc {
+    lookup Uppercase {
+        sub @uppercase by @smallcaps;
+    } Uppercase;
+
+    lookup Lowercase {
+        sub @lowercase by @smallcaps;
+    } Lowercase;
+} c2sc;
