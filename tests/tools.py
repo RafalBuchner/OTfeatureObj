@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 
 special_Characters = ( "[", "]", "{", "}", ";", "#" )
 special_Expressions = ( "languagesystem", "feature", "lookup", "pos", "sub", "by" )
@@ -138,7 +139,8 @@ def findNestedPairs(feaList,openingEl,closingEl):
 			nestingList = []
 			ascendingList = []
 	return pairDict
-	
+
+### delete whole function?:
 def getFeaturesAndLookups(feaList):
 	"""
 		TODO:
@@ -148,7 +150,7 @@ def getFeaturesAndLookups(feaList):
 	openingEl,closingEl = ("{","}")
 	pairDict = findNestedPairs(feaList,openingEl,closingEl)
 
-	feaElements = [None for x in range(int(len(pairDict.keys())/2))]
+	feaElements = [ None for x in range(int( len(pairDict.keys())/2 ) ) ]
 	feature = {}
 	lookup = {}
 	loadingFeatures = False
@@ -224,17 +226,88 @@ def getFeaturesAndLookups(feaList):
 			feaElements.remove(el)
 	return feaElements
 
+def getBlocks(feaList):
+
+	# creating the dictionary of feaList items, with indexes as a key. 
+	# It will be useful in deleting by orginal index
+	indexed_feaDict = {}
+	for i,x in enumerate(feaList):
+		indexed_feaDict[i]=x
+
+	openingEl,closingEl = ("{","}")
+	nestedPairs = findNestedPairs(feaList,openingEl,closingEl)
+	
+	blocks = []
+	block_index = 0
+	for i in indexed_feaDict:
+		element = indexed_feaDict[i]
+
+		if element == openingEl:
+			block_descrpition = {}
+			opening_Index = i
+			closing_index = None
+			search_pairIndex,search_isOpening,search_deepLevel = (None, None, None)
+			for index in nestedPairs:
+				pairIndex, isOpening, deepLevel = nestedPairs[index]
+				if index == i:
+					search_pairIndex, search_isOpening, search_deepLevel = nestedPairs[index]
+
+				if pairIndex == search_pairIndex and isOpening != search_isOpening and deepLevel == search_deepLevel:
+					closing_index = index
+			block_descrpition["type"]      = f"{feaList[i - 2]}-block"
+			block_descrpition["name"]      = feaList[i - 1]
+			block_descrpition["deepLevel"] = search_deepLevel
+			block_descrpition["index"]     = block_index
+			block_descrpition["feaList_index_range"] = (opening_Index-2,closing_index+2)
+			block_descrpition["content"]   = feaList[opening_Index+1:closing_index]
+			blocks.append(block_descrpition)
+
+
+	# deleting the blocks from indexed_feaDict
+	indexed_feaDict_wthout_blocks = copy.deepcopy(indexed_feaDict)
+	for block in blocks:
+		start_Index,end_index = block["feaList_index_range"]
+		indexes_to_remove = []
+		for i in indexed_feaDict_wthout_blocks:
+
+			if i >= start_Index and i <= end_index:
+				indexes_to_remove.append(i)
+		for i in indexes_to_remove:
+			indexed_feaDict_wthout_blocks.pop(i)
+	# for now retunrs blocks
+	return blocks
+	
+
+
+			
+			
+				
+
+
+
+
+
 
 currDir = os.path.dirname(os.path.abspath(__file__))
-feaPath = currDir + "/supersimple.fea"
+feaPath = currDir + "/example.fea"
 feaList = stripFea(feaPath)
+findNestedPairs(feaList,"{","}")
+# for i,e in enumerate(feaList):
+# 	print(i,e)
 
-openingEl = "{"
-# closingEl = "}"
-feaElements = getFeaturesAndLookups(feaList)
-for i in feaElements:
-	# print(i)
-	print(i)
-	print()
-	# for j in i["elements"]:
-	# 	print(">>>> ",j)
+
+bl = getBlocks(feaList)
+
+for n in bl:
+	print(n['type'])
+
+
+# openingEl = "{"
+# # closingEl = "}"
+# feaElements = getFeaturesAndLookups(feaList)
+# for i in feaElements:
+# 	# print(i)
+# 	print(i)
+# 	print()
+# 	# for j in i["elements"]:
+# 	# 	print(">>>> ",j)
