@@ -2,16 +2,17 @@ import os
 import re
 import copy
 
-special_Characters = ("[", "]", "{", "}", ";", "#")
+special_Characters = ("[", "]", "{", "}", "<", ">", ";", "#", "||||||||||||")
 special_Expressions = ("languagesystem", "feature",
-                       "lookup", "pos", "sub", "by")
+                       "lookup", "pos", "sub", "by",)
+strdigits = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0",)
 
 
 def replaceAtIndex(l1, l2, i):
     l2.reverse()
     del l1[i]
     for x in l2:
-        l1.insert(i, x)x
+        l1.insert(i, x)
     return l1
 
 
@@ -299,17 +300,19 @@ def getBlocks(feaList):
             index_0_deep += 1
 
     ###################################################
-    # classes declaration/classes without declaration #
     ###################################################
     # print(indexed_feaDict_wthout_blocks.values())
     openingEl, closingEl = ("[", "]")
     bracketPairs = findNestedPairs(feaList, openingEl, closingEl)
     declaredclasses = []
     subRules = []
+    posRules = []
     for i in indexed_feaDict_wthout_blocks:
         element = indexed_feaDict_wthout_blocks[i]
 
-        # DECLARED CLASSES
+        # DECLARED CLASSES #
+        ####################
+        ####################
         if element == openingEl:
             # Declartation
             if indexed_feaDict_wthout_blocks[i - 1] == "=":
@@ -349,51 +352,119 @@ def getBlocks(feaList):
 
             subRule = {}
             subRule["type"] = "sub-rule"
-            subRule["targets"] = temp_ruleElements[:sub_operator_index]
-            subRule["replacements"] = temp_ruleElements[sub_operator_index + 1:]
+            subRule["operator"] = temp_ruleElements[sub_operator_index]
+            subRule["targets"] = [el for el in temp_ruleElements[
+                :sub_operator_index] if el != "[" and el != "]"]
+            subRule["replacements"] = [el for el in temp_ruleElements[
+                sub_operator_index + 1:] if el != "[" and el != "]"]
             subRule["feaList_index_range"] = (opening_Index, closing_index)
             subRules.append(subRule)
-            print(feaList[subRule["feaList_index_range"][0]:subRule["feaList_index_range"][1]])
-            """
-                UWAGA!!!!
-                teraz będziesz musiał popracować nad interpretacją 
-                elementów replacements oraz targets w subRule:
-                moja propozycja jest taka, aby na tym etapie nie podmieniać klas. 
-                TO powinno być robione z poziomu kodu obiektowego.
-                PRZECZYTAJ JESZCZE JAK TO DZIAŁA W OPENtYPECOOKBOOK!!!!
-                SPRAWDZ PRZYKŁADY CO NA CO MOŻNA WYMIENIAĆ!!!
-            """
+
         elif element == "pos":
+            # searching for closing index
+            opening_Index = i
+            closing_index = None
+            for j in indexed_feaDict_wthout_blocks:
+                if j > i:
+                    if indexed_feaDict_wthout_blocks[j] == ";":
+                        closing_index = j + 1
+                        break
+
+            values = []
+            value_opening = None
+            for i, el in enumerate(feaList[opening_Index:closing_index]):
+                if "<" and ">" in feaList[opening_Index:closing_index]:
+                    if el == ">":
+                        break
+
+                    if el == "<":
+                        value_opening = i
+
+                    if value_opening:
+                        if i > value_opening:
+                            values.append(el)
+                else:
+                    if "-" in el or el[0] in strdigits:
+                        values = [el]
+
             posRule = {}
             posRule["type"] = "pos-rule"
+            posRule["values"] = {}
+            posRule["feaList_index_range"] = (opening_Index, closing_index)
+            if len(values) == 4:
+                posRule["values"]["xPlacement"], posRule["values"]["yPlacement"], posRule[
+                    "values"]["xAdvance"], posRule["values"]["yAdvance"] = values
+            elif len(values) == 1:
+                posRule["values"]["xPlacement"] = values[0]
+
+            # print(feaList[opening_Index:closing_index])
+            pre_targets = []
+            for i, el in enumerate(feaList[opening_Index + 1:closing_index]):
+                if el == "<" or el[0] == "-" or el[0] in strdigits:
+                    break
+                pre_targets.append(el)
+
+            bracesDict = findNestedPairs(pre_targets, "[", "]")
+            braceIndexes = []
+            pre_targets_wtho_targets = []
+            for braceIndex in bracesDict:
+                braceIndexes.append(braceIndex)
+            if len(braceIndexes) == 2:
+                pre_targets_wtho_targets = [i for i in pre_targets if i not in pre_targets[
+                    braceIndexes[0]:braceIndexes[1] + 1]]
+
+            elif len(braceIndexes) == 4:
+                pre_targets_wtho_targets = [i for i in pre_targets if i not in pre_targets[
+                    braceIndexes[0]:braceIndexes[1] + 1]]
+                pre_targets_wtho_targets = [i for i in pre_targets_wtho_targets if i not in pre_targets[
+                    braceIndexes[2]:braceIndexes[3] + 1]]
+
+            if len(bracesDict.keys()) == 4 or len(pre_targets_wtho_targets) > 0 or len(pre_targets) == 2:
+                posRule["rule-type"] = 2
+                if len(bracesDict.keys()) == 4:
+                    posRule["targets"] = [
+                        pre_targets[braceIndexes[0] + 1:braceIndexes[1]],
+                        pre_targets[braceIndexes[2] + 1:braceIndexes[3]]
+                    ]
+                elif len(bracesDict.keys()) == 2:
+                    if pre_targets[0] == "[":
+                        posRule["targets"] = [
+                            pre_targets[braceIndexes[0] + 1:braceIndexes[1]],
+                            pre_targets_wtho_targets
+                        ]
+                    else:
+                        posRule["targets"] = [
+                            pre_targets_wtho_targets,
+                            pre_targets[braceIndexes[0] + 1:braceIndexes[1]]
+                        ]
+
+                else:
+                    posRule["targets"] = [[pre_targets[0]], [pre_targets[1]]]
+
+            elif len(bracesDict.keys()) == 2 and len(pre_targets_wtho_targets) == 0 or len(pre_targets) == 1:
+                posRule["rule-type"] = 1
+                if len(bracesDict.keys()) == 2:
+                    posRule["targets"] = [pre_targets[
+                        braceIndexes[0] + 1:braceIndexes[1]]]
+                else:
+                    posRule["targets"] = [pre_targets]
+            posRules.append(posRule)
 
     for b in blocks_0_deep:  # test
-        print(b["type"], b["deepLevel"], b["name"])  # test
+        print(b)  # test
+    for sr in subRules:
+        print(sr)
+    for pr in posRules:
+        print(pr)
+    for c in declaredclasses:
+        print(c)
 
     return blocks
 
-
-currDir = os.path.dirname(os.path.abspath(__file__))
-feaPath = currDir + "/example.fea"
-feaList = stripFea(feaPath)
-findNestedPairs(feaList, "{", "}")
-# for i,e in enumerate(feaList):
-# 	print(i,e)
-
-
-bl = getBlocks(feaList)
-
-# for n in bl:
-#	 for m in n:
-#		 print(n[m])
-
-
-# openingEl = "{"
-# # closingEl = "}"
-# feaElements = getFeaturesAndLookups(feaList)
-# for i in feaElements:
-# 	# print(i)
-# 	print(i)
-# 	print()
-# 	# for j in i["elements"]:
-# 	# 	print(">>>> ",j)
+if __name__ == "__main__":
+    currDir = os.path.dirname(os.path.abspath(__file__))
+    feaPath = currDir + "/supersimple.fea"
+    # feaPath = currDir + "/example.fea"
+    feaList = stripFea(feaPath)
+    print(feaList)
+    # bl = getBlocks(feaList)

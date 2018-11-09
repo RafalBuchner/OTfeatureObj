@@ -8,8 +8,8 @@ languagesystem latn dflt;
 @figures         = [zero    one    two];
 @figuresSmallcap = [zero.sc one.sc two.sc];
 
-@punctuation         = [exclam];
-@punctuationSmallcap = [exclam.sc];
+@punctuation         = [ exclam ]; 
+@punctuationSmallcap = [ exclam.sc ];
 
 sub @a by @a1;
 sub @b by @b1;
@@ -21,7 +21,19 @@ feature smcp {
 
 sub @d by @d1;
 sub @e by @e1;
+sub @f @i by f_i;
 sub [a b c] by [a.alt b.alt c.alt];
+sub w o r' d s by r.alt;
+
+pos a <20 10 10 10>;
+pos @h <20 10 10 10>;
+pos V A -50;
+pos [n m h] [quoteright dblquoteright] <10 10 10 10>;
+pos [n m h] @quotes <10 10 10 10>;
+pos @quotes [n m h] <10 10 10 10>;
+pos [n m h] quoteright <10 10 10 10>;
+pos @h @quotes <10 10 10 10>;
+pos [a b c] <20 10 10 10>;
 
 feature c2sc {
     lookup Uppercase {
