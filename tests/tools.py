@@ -11,7 +11,7 @@ def replaceAtIndex(l1, l2, i):
     l2.reverse()
     del l1[i]
     for x in l2:
-        l1.insert(i, x)
+        l1.insert(i, x)x
     return l1
 
 
@@ -227,6 +227,9 @@ def getFeaturesAndLookups(feaList):
 
 
 def getBlocks(feaList):
+    """
+        returns set of dicts
+    """
     def _getCorrespondingBraceIndex(indexOfBrace, braceDict):
         closing_index = None
         search_pairIndex, search_isOpening, search_deepLeve = (
