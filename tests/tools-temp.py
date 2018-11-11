@@ -275,6 +275,18 @@ def getBlocks(feaList):
         # RULES #
         #########
         if element == "sub":
+            # ---------------
+            # GSUB Lookups
+            # ---------------
+            """
+                # GSUB Lookups
+                TODO:
+                    - ignore
+                    - Substitutions and Positioning Based on Context
+                    - make sure about the GSUB Lookup types (You should take in the consideration difference between the glyphclasses and glyph sequences)
+                        (now the <GSUB l-type 1 B> can be confused with <GSUB l-type 4>
+
+            """
             sub_operator_index = None
             opening_Index = i
             closing_index = None
@@ -302,12 +314,7 @@ def getBlocks(feaList):
             subRule["replacements"] = [el for el in temp_ruleElements[
                 sub_operator_index + 1:] if el != "[" and el != "]"]
             subRule["feaList_index_range"] = (opening_Index, closing_index)
-            """
-                TODO:
-                    - ignore
-                    - Substitutions and Positioning Based on Context
-                    
-            """
+            
             if len(subRule["targets"]) == len(subRule["replacements"]) and subRule["operator"] == "by":
                 # Replace One With One - GSUB LOOKTYPE 1
                 subRule["rule-type"] = 1
@@ -327,7 +334,18 @@ def getBlocks(feaList):
 
             subRules.append(subRule)
 
+            print(subRule)
+            break
+
         elif element == "pos":
+            # ---------------
+            # GPOS Lookups
+            # ---------------
+            """
+                # GPOS Lookups
+                TODO:
+
+            """
             # searching for closing index
             opening_Index = i
             closing_index = None
