@@ -275,9 +275,9 @@ def getBlocks(feaList):
         # RULES #
         #########
         if element == "sub":
-            # ---------------
+            # ------------------------------------------------------------------------------------------------------------------------
             # GSUB Lookups
-            # ---------------
+            # ------------------------------------------------------------------------------------------------------------------------
             """
                 # GSUB Lookups
                 TODO:
@@ -334,13 +334,13 @@ def getBlocks(feaList):
 
             subRules.append(subRule)
 
-            print(subRule)
-            break
+            # print(subRule)
+            # break
 
-        elif element == "pos":
-            # ---------------
+        elif element == "pos" or element == "position":
+            # ------------------------------------------------------------------------------------------------------------------------
             # GPOS Lookups
-            # ---------------
+            # ------------------------------------------------------------------------------------------------------------------------
             """
                 # GPOS Lookups
                 TODO:
@@ -382,7 +382,7 @@ def getBlocks(feaList):
             elif len(values) == 1:
                 posRule["values"]["xPlacement"] = values[0]
 
-            # print(feaList[opening_Index:closing_index])
+            # managing the class-braces
             pre_targets = []
             for i, el in enumerate(feaList[opening_Index + 1:closing_index]):
                 if el == "<" or el[0] == "-" or el[0] in strdigits:
@@ -434,6 +434,8 @@ def getBlocks(feaList):
                 else:
                     posRule["targets"] = [pre_targets]
             posRules.append(posRule)
+            # print(posRules)
+            # break
 
     # for c in declaredclasses:
     #     print(c)
@@ -442,7 +444,7 @@ def getBlocks(feaList):
     #     print(feaList[b['feaList_index_range'][0]:b['feaList_index_range'][1]])
     for sr in subRules:
         print(sr)
-        # print(sr["rule-type"])
+        print(sr["rule-type"])
     # for pr in posRules:
     #     print(pr)
 
@@ -450,7 +452,7 @@ def getBlocks(feaList):
 
 if __name__ == "__main__":
     currDir = os.path.dirname(os.path.abspath(__file__))
-    feaPath = currDir + "/example.fea"
+    feaPath = currDir + "/supersimple.fea"
     # feaPath = currDir + "/example.fea"
     feaList = stripFea(feaPath)
 
