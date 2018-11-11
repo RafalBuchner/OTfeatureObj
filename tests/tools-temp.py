@@ -46,8 +46,7 @@ def getItemsBetweenElemnts(array, openingEl, closingEl):
 
     return list_of_values
 
-
-def stripFea(path):
+def getFeaText(path):
     """
         TODO: change from path to txt, the object passed shouldn't be a path, but string.
         Path declaration, and file declaration should be declared outside this function
@@ -56,6 +55,9 @@ def stripFea(path):
         '/')[-1].split('.')[-1] == "fea", "passed file is not a OT-feature file"
     file = open(path, "r")
     fea_text = file.read()
+    return fea_text
+
+def stripFea(fea_text):
     feaList = []
     temp_feaList = []
     for el in fea_text.split("\n"):
@@ -171,6 +173,36 @@ def findNestedPairs(feaList, openingEl, closingEl):
             ascendingList = []
     return pairDict
 
+def wrapBraces(char_list,braces):
+    """
+        Takes the list that contains sequence of characters. 
+        Wraps it by given braces.
+        
+        USAGE:
+        >>> char_list = [ "[", "a", "b", "c", "]", "[", "d", "e", "f", "]"]
+        >>> wrapped_char_list = _wrapBraces(char_list,("[","]"))
+        >>> print(wrapped_char_list)
+        [['a', 'b', 'c'], ['d', 'e', 'f']]
+        >>> char_list = ["a","b","c"]
+        >>> wrapped_char_list = _wrapBraces(char_list,("[","]"))
+        >>> print(wrapped_char_list)
+        ['a', 'b', 'c']
+    """
+    opening,closing=braces
+    wrapped_char_list = []
+    if opening in char_list and closing in char_list:
+        bracesDict = findNestedPairs(char_list, opening, closing)
+        braceIndexes = [indx for indx in bracesDict]
+
+        for i_a, i_b in zip(braceIndexes[:-1], braceIndexes[1:]):
+            if len(char_list[i_a+1:i_b]) != 0:
+                wrapped_char_list.append(char_list[i_a+1:i_b])
+
+        return wrapped_char_list
+    else:
+        wrapped_char_list = char_list
+        return wrapped_char_list
+
 def getBlocks(feaList):
     """
         returns set of dicts
@@ -274,7 +306,7 @@ def getBlocks(feaList):
         #########
         # RULES #
         #########
-        if element == "sub":
+        if element == "sub" or element == "substitute":
             # ------------------------------------------------------------------------------------------------------------------------
             # GSUB Lookups
             # ------------------------------------------------------------------------------------------------------------------------
@@ -305,14 +337,16 @@ def getBlocks(feaList):
             for subOperator in ("by", "from"):
                 if subOperator in temp_ruleElements:
                     sub_operator_index = temp_ruleElements.index(subOperator)
-
+  
+            # managing the class-braces
+            pre_targets = [el for el in temp_ruleElements[:sub_operator_index]]
+            pre_replace = [el for el in temp_ruleElements[sub_operator_index + 1:]]
+            
             subRule = {}
             subRule["type"] = "sub-rule"
             subRule["operator"] = temp_ruleElements[sub_operator_index]
-            subRule["targets"] = [el for el in temp_ruleElements[
-                :sub_operator_index] if el != "[" and el != "]"]
-            subRule["replacements"] = [el for el in temp_ruleElements[
-                sub_operator_index + 1:] if el != "[" and el != "]"]
+            subRule["targets"] = wrapBraces(pre_targets,("[","]"))
+            subRule["replacements"] = wrapBraces(pre_replace,("[","]"))
             subRule["feaList_index_range"] = (opening_Index, closing_index)
             
             if len(subRule["targets"]) == len(subRule["replacements"]) and subRule["operator"] == "by":
@@ -323,7 +357,7 @@ def getBlocks(feaList):
                 # Replace One With Many - GSUB LOOKTYPE 2
                 subRule["rule-type"] = 2
 
-            elif len(subRule["targets"]) < len(subRule["replacements"]) and subRule["operator"] == "from":
+            elif len(subRule["targets"]) == len(subRule["replacements"]) and subRule["operator"] == "from":
                 # Replace One From Many - GSUB LOOKTYPE 3
                 subRule["rule-type"] = 3
 
@@ -454,6 +488,7 @@ if __name__ == "__main__":
     currDir = os.path.dirname(os.path.abspath(__file__))
     feaPath = currDir + "/supersimple.fea"
     # feaPath = currDir + "/example.fea"
-    feaList = stripFea(feaPath)
+    fea_txt = getFeaText(feaPath)
+    feaList = stripFea(fea_txt)
 
     bl = getBlocks(feaList)
