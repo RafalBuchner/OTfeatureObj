@@ -8,22 +8,20 @@ languagesystem latn dflt;
 @figures         = [zero    one    two];
 @figuresSmallcap = [zero.sc one.sc two.sc];
 
-@punctuation         = [ exclam ]; 
+@punctuation         = [exclam]; 
 @punctuationSmallcap = [ exclam.sc ];
 
-sub @a by @a1;
-sub @b by @b1;
-sub @c by @c1;
 
+
+sub [a b c] by [A.sc B.sc C.sc];
+sub f_i by f i;
+sub a from [a.alt1 a.alt2 a.alt3];
+sub @f @i by f_i;
 feature smcp {
     sub @lowercase by @smallcaps;
 } smcp;
 
-sub @d by @d1;
-sub @e by @e1;
-sub @f @i by f_i;
-sub [a b c] by [a.alt b.alt c.alt];
-sub w o r' d s by r.alt;
+
 
 pos a <20 10 10 10>;
 pos @h <20 10 10 10>;

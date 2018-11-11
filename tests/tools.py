@@ -57,6 +57,7 @@ def stripFea(path):
             fea_text_list_temp[i] = element.replace("\t", "")
 
     fea_text_list = []
+
     for element in fea_text_list_temp:
         skip = False  # flow control
         temp = []
@@ -77,6 +78,7 @@ def stripFea(path):
                 if position == 0 and new_element != "":
                     fea_text_list.append(char)
                     fea_text_list.append(new_element)
+                    print(new_element)
                     skip = True
 
                 elif element[position] == element[-1] and new_element != "":
@@ -104,6 +106,7 @@ def stripFea(path):
             if i + 1 < len(fea_text_list):
                 if element == "\n" and fea_text_list[i + 1] == element:
                     del fea_text_list[i + 1]
+    print(fea_text_list)
 
     return fea_text_list
 
@@ -466,5 +469,5 @@ if __name__ == "__main__":
     feaPath = currDir + "/supersimple.fea"
     # feaPath = currDir + "/example.fea"
     feaList = stripFea(feaPath)
-    print(feaList)
+
     # bl = getBlocks(feaList)
