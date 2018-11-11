@@ -13,15 +13,17 @@ languagesystem latn dflt;
 
 
 
+
+
+
+
+feature smcp {
+    sub @lowercase by @smallcaps;
+} smcp;
 sub [a b c] by [A.sc B.sc C.sc];
 sub f_i by f i;
 sub a from [a.alt1 a.alt2 a.alt3];
 sub @f @i by f_i;
-feature smcp {
-    sub @lowercase by @smallcaps;
-} smcp;
-
-
 
 pos a <20 10 10 10>;
 pos @h <20 10 10 10>;
@@ -32,7 +34,6 @@ pos @quotes [n m h] <10 10 10 10>;
 pos [n m h] quoteright <10 10 10 10>;
 pos @h @quotes <10 10 10 10>;
 pos [a b c] <20 10 10 10>;
-
 feature c2sc {
     lookup Uppercase {
         sub @uppercase by @smallcaps;

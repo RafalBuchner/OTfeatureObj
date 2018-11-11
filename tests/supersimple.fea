@@ -1,1 +1,1 @@
-substitute [one one.oldstyle] [slash fraction] [two two.oldstyle] by onehalf;
+pos A C <10 0 20 0>;
