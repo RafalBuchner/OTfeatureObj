@@ -1,1 +1,2 @@
-pos A C <10 0 20 0>;
+languagesystem latn NLD; 
+ignore pos W O R' L' D;

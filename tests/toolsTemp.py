@@ -369,11 +369,30 @@ def getSemanticDicts(feaList):
     declaredclasses = []
     subRules = []
     posRules = []
+    expressions = []
     for j, i in enumerate(indexed_feaDict_wthout_blocks):
         element = indexed_feaDict_wthout_blocks[i]
 
         prev_element = list(indexed_feaDict_wthout_blocks.values())[
             j - 1] if j > 0 else None
+
+        #######################
+        # SPECIAL EXPRESSIONS #
+        #######################
+        if element in ("languagesystem","language","script"):
+            opening_index = i
+            closing_index = None
+            for j, el in enumerate(feaList[opening_index:]):
+                if el == ";":
+                    closing_index = j+1
+                    break
+            expression = {}
+            expression["feaList_index_range"] = (opening_index,closing_index)
+            expression["type"] = element
+            expression["arguments"] = feaList[opening_index+1:closing_index-1]
+            expressions.append(expression)
+
+
 
         ####################
         # DECLARED CLASSES #
@@ -399,15 +418,6 @@ def getSemanticDicts(feaList):
             # ------------------------------------------------------------------------------------------------------------------------
             # GSUB Lookups
             # ------------------------------------------------------------------------------------------------------------------------
-            """
-                # GSUB Lookups
-                TODO:
-                    - ignore
-                    - Substitutions and Positioning Based on Context
-                    - make sure about the GSUB Lookup types (You should take in the consideration difference between the glyphclasses and glyph sequences)
-                        (now the <GSUB l-type 1 B> can be confused with <GSUB l-type 4>
-
-            """
             subRule = {}
 
             sub_operator_index = None
@@ -544,48 +554,37 @@ def getSemanticDicts(feaList):
 
             bracesDict = findNestedPairs(pre_targets, "[", "]")
             braceIndexes = []
-            pre_targets_wtho_targets = []
+            pre_targets_wtho_braces = []
             for braceIndex in bracesDict:
                 braceIndexes.append(braceIndex)
-            if len(braceIndexes) == 2:
-                pre_targets_wtho_targets = [i for i in pre_targets if i not in pre_targets[
-                    braceIndexes[0]:braceIndexes[1] + 1]]
 
-            elif len(braceIndexes) == 4:
-                pre_targets_wtho_targets = [i for i in pre_targets if i not in pre_targets[
-                    braceIndexes[0]:braceIndexes[1] + 1]]
-                pre_targets_wtho_targets = [i for i in pre_targets_wtho_targets if i not in pre_targets[
-                    braceIndexes[2]:braceIndexes[3] + 1]]
 
-            if len(bracesDict.keys()) == 4 or len(pre_targets_wtho_targets) > 0 or len(pre_targets) == 2:
-                posRule["rule-type"] = 2
-                if len(bracesDict.keys()) == 4:
-                    posRule["targets"] = [
-                        pre_targets[braceIndexes[0] + 1:braceIndexes[1]],
-                        pre_targets[braceIndexes[2] + 1:braceIndexes[3]]
-                    ]
-                elif len(bracesDict.keys()) == 2:
-                    if pre_targets[0] == "[":
-                        posRule["targets"] = [
-                            pre_targets[braceIndexes[0] + 1:braceIndexes[1]],
-                            pre_targets_wtho_targets
-                        ]
-                    else:
-                        posRule["targets"] = [
-                            pre_targets_wtho_targets,
-                            pre_targets[braceIndexes[0] + 1:braceIndexes[1]]
-                        ]
-
-                else:
-                    posRule["targets"] = [[pre_targets[0]], [pre_targets[1]]]
-
-            elif len(bracesDict.keys()) == 2 and len(pre_targets_wtho_targets) == 0 or len(pre_targets) == 1:
+            if len(wrapBraces(pre_targets, ("[","]"))) == 1:
                 posRule["rule-type"] = 1
-                if len(bracesDict.keys()) == 2:
-                    posRule["targets"] = [pre_targets[
-                        braceIndexes[0] + 1:braceIndexes[1]]]
-                else:
-                    posRule["targets"] = [pre_targets]
+            elif len(wrapBraces(pre_targets, ("[","]"))) == 2:
+                posRule["rule-type"] = 2
+
+            posRule["targets"] = wrapBraces(pre_targets, ("[","]"))
+
+            ### contextual
+            input_glyphs = []
+            for i, el in enumerate(posRule["targets"]):
+                if el == "'":
+                    input_glyphs.append(posRule["targets"][i - 1])
+
+            posRule["contextual-sequence"] = posRule["targets"]
+            posRule["targets"] = input_glyphs
+            if prev_element == "ignore":
+                posRule["operator"] = "ignore"
+                
+            if "contextual-sequence" in posRule.keys(): # that means that the rule has contextual behaviour
+                posRule["rule-type"] = 8
+                if len(posRule["targets"]) == 1:
+                    posRule["sub-type"] = 1
+                elif len(posRule["targets"]) == 2:
+                    posRule["sub-type"] = 2
+            
+
             # print(posRule)
             posRules.append(posRule)
             # print(posRules)
@@ -596,8 +595,8 @@ def getSemanticDicts(feaList):
     # for b in blocks_0_deep:
     #     print(b)
         # print(feaList[b['feaList_index_range'][0]:b['feaList_index_range'][1]])
-    # for sr in subRules:
-    #     print(sr)
+    for sr in subRules:
+        print(sr)
     #     print(sr["rule-type"])
     for pr in posRules:
         print(pr)
