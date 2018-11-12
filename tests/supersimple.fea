@@ -1,2 +1,8 @@
-languagesystem latn NLD; 
-ignore pos W O R' L' D;
+
+lookup Uppercase {
+    sub @uppercase by @smallcaps;
+} Uppercase;
+
+lookup Lowercase {
+    sub @lowercase by @smallcaps;
+} Lowercase;

@@ -322,17 +322,32 @@ def getSemanticDicts(feaList):
 
             if element == openingEl:
                 block_descrpition = {}
-                opening_Index = i
+                opening_index = i
                 closing_index = _getCorrespondingBraceIndex(i, nestedPairs)
                 block_descrpition["type"] = f"{feaList[i - 2]}-block"
                 block_descrpition["name"] = feaList[i - 1]
                 block_descrpition["deepLevel"] = nestedPairs[i][2]
                 block_descrpition["index"] = block_index
                 block_descrpition["feaList_index_range"] = (
-                    opening_Index - 2, closing_index + 3)  # range of global indexes
+                    opening_index - 2, closing_index + 3)  # range of global indexes
                 block_descrpition["content"] = feaList[
-                    opening_Index + 1:closing_index]
+                    opening_index + 1:closing_index]
+                temp_collection_deeLevels = [0] ###WIP
+                start_digging = False
+                for brace_index in nestedPairs: ###WIP
+                    if brace_index == opening_index:
+                        start_digging = True
+                    elif brace_index == closing_index:
+                        start_digging = False
+                        break
+                    if start_digging:
+                        temp_collection_deeLevels.append(nestedPairs[brace_index][2])
+                max_deep = max(temp_collection_deeLevels)
+
+                block_descrpition["max_deep"] = max_deep ###WIP
                 blocks.append(block_descrpition)
+
+
 
         # deleting the blocks from indexed_feaDict
         indexed_feaDict_wthout_blocks = copy.deepcopy(indexed_feaDict)
@@ -485,7 +500,6 @@ def getSemanticDicts(feaList):
                 if prev_element:
                     if prev_element == "ignore":
                         subRule["operator"] = "ignore"
-                        # subRule["targets"] = temp_ruleElements
 
                         input_glyphs = []
                         subRule[
@@ -504,11 +518,7 @@ def getSemanticDicts(feaList):
             # ------------------------------------------------------------------------------------------------------------------------
             # GPOS Lookups
             # ------------------------------------------------------------------------------------------------------------------------
-            """
-                # GPOS Lookups
-                TODO:
 
-            """
             # searching for closing index
             opening_Index = i
             closing_index = None
@@ -558,7 +568,6 @@ def getSemanticDicts(feaList):
             for braceIndex in bracesDict:
                 braceIndexes.append(braceIndex)
 
-
             if len(wrapBraces(pre_targets, ("[","]"))) == 1:
                 posRule["rule-type"] = 1
             elif len(wrapBraces(pre_targets, ("[","]"))) == 2:
@@ -583,34 +592,31 @@ def getSemanticDicts(feaList):
                     posRule["sub-type"] = 1
                 elif len(posRule["targets"]) == 2:
                     posRule["sub-type"] = 2
-            
 
-            # print(posRule)
             posRules.append(posRule)
-            # print(posRules)
-            # break
 
-    # for c laredclasses:
-    #     print(c)in dec
-    # for b in blocks_0_deep:
-    #     print(b)
-        # print(feaList[b['feaList_index_range'][0]:b['feaList_index_range'][1]])
-    for sr in subRules:
-        print(sr)
-    #     print(sr["rule-type"])
-    for pr in posRules:
-        print(pr)
+    return {"expressions":expressions,"declaredclasses":declaredclasses,"subRules":subRules,"posRules":posRules,"blocks_0_deep":blocks_0_deep}
 
-    return blocks
+def readFeaList(feaList):
+    semanticDicts = getSemanticDicts(feaList)
+    
+    if len(semanticDicts["blocks_0_deep"]) == 0:
+        return semanticDicts
 
-if __name__ == "__main__":
-    currDir = os.path.dirname(os.path.abspath(__file__))
-    feaPath = currDir + "/supersimple.fea"
-    # feaPath = currDir + "/example.fea"
+    for i,block in enumerate(semanticDicts["blocks_0_deep"]):
+        block["content"] = readFeaList(block["content"])
+
+        if i == len(semanticDicts["blocks_0_deep"])-1:
+            return semanticDicts
+
+def readFeaFile(feaPath):
     fea_txt = getFeaText(feaPath)
     feaList = getFeaList(fea_txt)
+    feaDict = readFeaList(feaList)
+    return feaDict
 
-    bl = getSemanticDicts(feaList)
-# if __name__ == "__main__":
-#     import doctest
-#     doctest.testmod()
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
