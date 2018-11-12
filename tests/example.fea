@@ -1,12 +1,15 @@
 languagesystem DFLT dflt;
 languagesystem latn dflt;
 
-@lowercase = [a    b    c];
-@smallcaps = [A.sc B.sc C.sc];
 
 feature smcp {
-    sub @lowercase by @smallcaps;
+	lookup lc_sc {
+	    sub @lowercase by @smallcaps;
+	} lc_sc;
 } smcp;
+
+@lowercase = [a    b    c];
+@smallcaps = [A.sc B.sc C.sc];
 
 feature kern {
     pos V A -50;
