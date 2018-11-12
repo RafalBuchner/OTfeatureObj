@@ -2,47 +2,12 @@ languagesystem DFLT dflt;
 languagesystem latn dflt;
 
 @lowercase = [a    b    c];
-@uppercase = [A    B    C];
 @smallcaps = [A.sc B.sc C.sc];
-
-@figures         = [zero    one    two];
-@figuresSmallcap = [zero.sc one.sc two.sc];
-
-@punctuation         = [exclam]; 
-@punctuationSmallcap = [ exclam.sc ];
-
-
-
-
-
-
 
 feature smcp {
     sub @lowercase by @smallcaps;
 } smcp;
-sub [a b c] by [A.sc B.sc C.sc];
-sub f_i by f i;
-sub a from [a.alt1 a.alt2 a.alt3];
-sub @f @i by f_i;
 
-pos a <20 10 10 10>;
-pos @h <20 10 10 10>;
-pos V A -50;
-pos [n m h] [quoteright dblquoteright] <10 10 10 10>;
-pos [n m h] @quotes <10 10 10 10>;
-pos @quotes [n m h] <10 10 10 10>;
-pos [n m h] quoteright <10 10 10 10>;
-pos @h @quotes <10 10 10 10>;
-pos [a b c] <20 10 10 10>;
-feature c2sc {
-    lookup Uppercase {
-        sub @uppercase by @smallcaps;
-    } Uppercase;
-
-    lookup Lowercase {
-        sub @lowercase by @smallcaps;
-    } Lowercase;
-
-    sub @figures by @figuresSmallcap;
-    sub @punctuation by @punctuationSmallcap;
-} c2sc;
+feature kern {
+    pos V A -50;
+} kern;

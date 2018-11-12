@@ -1,8 +1,11 @@
 
-lookup Uppercase {
-    sub @uppercase by @smallcaps;
-} Uppercase;
 
-lookup Lowercase {
-    sub @lowercase by @smallcaps;
-} Lowercase;
+pos a <20 10 10 10>;
+pos @h <20 10 10 10>;
+pos V A -50;
+pos [n m h] [quoteright dblquoteright] <10 10 10 10>;
+pos [n m h] @quotes <10 10 10 10>;
+pos @quotes [n m h] <10 10 10 10>;
+pos [n m h] quoteright <10 10 10 10>;
+pos @h @quotes <10 10 10 10>;
+pos [a b c] <20 10 10 10>;
