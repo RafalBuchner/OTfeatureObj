@@ -355,6 +355,8 @@ def getSemanticDicts(feaList):
                 subRule["operator"] = temp_ruleElements[sub_operator_index]
                 subRule["targets"] = wrapBraces(pre_targets, ("[", "]"))
                 subRule["replacements"] = wrapBraces(pre_replace, ("[", "]"))
+                subRule["contextual"] = False
+                subRule["contextual-sequence"] = []
 
                 if len(subRule["targets"]) == len(subRule["replacements"]) and subRule["operator"] == "by":
                     # Replace One With One - GSUB LOOKTYPE 1
@@ -381,8 +383,9 @@ def getSemanticDicts(feaList):
                         if el == "'":
                             input_glyphs.append(subRule["targets"][i - 1])
 
-                            subRule["sub-rule-type"] = subRule["rule-type"]
-                    subRule["rule-type"] = 6  # ?
+                            # subRule["sub-rule-type"] = subRule["rule-type"]
+                    subRule["sub-rule-type"] = 6  # ?
+                    subRule["contextual"] = True
                     subRule["targets"] = input_glyphs
 
             else:
@@ -399,6 +402,8 @@ def getSemanticDicts(feaList):
                                     subRule["contextual-sequence"][i - 1])
 
                         subRule["rule-type"] = 6  # ?
+                        subRule["contextual"] = True
+                        subRule["replacements"] = []
                         subRule["targets"] = input_glyphs
 
             subRules.append(subRule)
@@ -429,20 +434,21 @@ def getSemanticDicts(feaList):
 
                     if value_opening:
                         if i > value_opening:
-                            values.append(el)
+                            values.append(int(el))
                 else:
                     if "-" in el or el[0] in strdigits:
-                        values = [el]
+                        values = [int(el)]
 
             posRule = {}
             posRule["type"] = "pos-rule"
-            posRule["values"] = {}
+            posRule["values"] = values
             posRule["feaList_index_range"] = (opening_Index, closing_index)
-            if len(values) == 4:
-                posRule["values"]["xPlacement"], posRule["values"]["yPlacement"], posRule[
-                    "values"]["xAdvance"], posRule["values"]["yAdvance"] = values
-            elif len(values) == 1:
-                posRule["values"]["xPlacement"] = values[0]
+            posRule["operator"] = None
+            # if len(values) == 4:
+            #     posRule["values"]["xPlacement"], posRule["values"]["yPlacement"], posRule[
+            #         "values"]["xAdvance"], posRule["values"]["yAdvance"] = values
+            # elif len(values) == 1:
+            #     posRule["values"]["xPlacement"] = values[0]
 
             # managing the class-braces
             pre_targets = []
@@ -463,6 +469,8 @@ def getSemanticDicts(feaList):
                 posRule["rule-type"] = 2
 
             posRule["targets"] = wrapBraces(pre_targets, ("[", "]"))
+            posRule["contextual"] = False
+            posRule["contextual-sequence"] = []
 
             # contextual
             input_glyphs = []
@@ -472,6 +480,8 @@ def getSemanticDicts(feaList):
             if len(input_glyphs) > 0:
                 # that means that the rule has contextual behaviour
                 posRule["contextual-sequence"] = posRule["targets"]
+                if ";" in posRule["contextual-sequence"]:
+                    del posRule["contextual-sequence"][-1]
                 posRule["targets"] = input_glyphs
                 if prev_element == "ignore":
                     posRule["operator"] = "ignore"
@@ -481,6 +491,7 @@ def getSemanticDicts(feaList):
                 elif len(posRule["targets"]) == 2:
                     posRule["rule-type"] = 2
                 posRule["sub-type"] = 8
+                posRule["contextual"] = True
 
             posRules.append(posRule)
 
@@ -507,10 +518,13 @@ def readFeaFile(feaPath):
     return feaDict
 
 
-# if __name__ == "__main__":
-#     currDir = os.path.dirname(os.path.abspath(__file__))
-#     feaPath = currDir + "/example.fea"
-#     feaDict = readFeaFile(feaPath)
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    currDir = os.path.dirname(os.path.abspath(__file__))
+    feaPath = currDir + "/supersimple.fea"
+    feaDict = readFeaFile(feaPath)
+    # print(feaDict["posRules"][0])
+    print(feaDict["blocks"][0])
+
+# if __name__ == "__main__":
+#     import doctest
+#     doctest.testmod()
