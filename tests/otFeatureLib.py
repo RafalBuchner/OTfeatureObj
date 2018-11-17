@@ -12,12 +12,20 @@ class FEA_Doc(object):
     '''
 
     def __init__(self, path=None):
+        ### maybe not? maybe too specific? needeed mainly for segregated saving 
+        # self.oneLineExpressions = []
+        # self.declaredClasses = []
+        # self.rules = []
+        # self.lookups = []
+        # self.features = []
+
         self. path = path if path else None
         if path:
             self.loadFeaFile(path) 
         else: 
             self.content = []
-        self.globalClassesNames = [] ### WIP ### Think how to implement it on 0 level, propably in loadFeaFile(), but how????
+
+        
 
     @staticmethod
     def _nestLevel(el,count):
@@ -55,12 +63,18 @@ class FEA_Doc(object):
                     one_line_expression.parent = parent
                     content[feaList_index] = one_line_expression
 
+                    #### maybe Not?
+                    # self.oneLineExpressions.append(one_line_expression)
+
             elif el_type == "declaredclasses":
                 for element in FEAcontent[el_type]:
                     feaList_index = element["feaList_index_range"][0]
                     declaredClass = FEA_Class(element["content"],element["name"])
                     declaredClass.parent = parent
                     content[feaList_index] = declaredClass
+
+                    #### maybe Not?
+                    # self.declaredClasses.append(declaredClass)
 
             elif el_type == "subRules":
                 for element in FEAcontent[el_type]:
@@ -80,6 +94,9 @@ class FEA_Doc(object):
                     subRule.parent = parent
                     content[feaList_index] = subRule
 
+                    #### maybe Not?
+                    # self.rules.append(subRule)
+
             elif el_type == "posRules":
                 for element in FEAcontent[el_type]:
                     feaList_index = element["feaList_index_range"][0]
@@ -95,6 +112,9 @@ class FEA_Doc(object):
                     posRule._initPOS(lookupType, targets, values, operator, isContextual, contextualSequence)
                     posRule.parent = parent
                     content[feaList_index] = posRule
+                    
+                    #### maybe Not?
+                    # self.rules.append(posRule)
 
             elif el_type == "blocks":
                 for element in FEAcontent[el_type]:
@@ -109,6 +129,12 @@ class FEA_Doc(object):
                     block.content = self.readFeaContent(block,element["content"]) ###WIP
                     block.parent = parent
                     content[feaList_index] = block
+
+                    #### maybe Not?
+                    # if blockType == "lookup" and isinstance(block.parent, FEA_Doc):
+                    #     self.lookups.append(block)
+                    # elif blockType == "feature" and isinstance(block.parent, FEA_Doc):
+                    #     self.features.append(block)
             
         ### changing order to the right one
         main_content = []
@@ -137,12 +163,38 @@ class FEA_Doc(object):
 
     def getStr(self):
         fea_text = ""
-        for element in self.content:
+        for i,element in enumerate(self.content):
+            if type(self.content[i-1]) != type(element) and i != 0:
+                fea_text += "\n"
             fea_text += (element.getStr()+"\n")
         return fea_text
 
-    def saveFeaFile(self, path):
-        pass
+    # def getSegregatedStr(self):
+    #     fea_text = ""
+    #     for element in self.oneLineExpressions:
+    #         fea_text += (element.getStr()+"\n")
+    #     fea_text += "\n"
+    #     for element in self.declaredClasses:
+    #         fea_text += (element.getStr()+"\n")
+    #     fea_text += "\n"
+    #     for element in self.rules:
+    #         fea_text += (element.getStr()+"\n")
+    #     fea_text += "\n"
+    #     for element in self.lookups:
+    #         fea_text += (element.getStr()+"\n")
+    #     fea_text += "\n"
+    #     for element in self.features:
+    #         fea_text += (element.getStr()+"\n")
+    #         fea_text += "\n"
+    #     fea_text += "\n"
+
+    #     return fea_text
+
+    def saveFeaFile(self, path=None):
+        # filename = path.split("/")[-1]
+        text_file = open(path, "w+")
+        text_file.write(self.getStr())
+        text_file.close()
 
     def __repr__(self):
         return "<FEA_Doc Object>"
@@ -358,8 +410,6 @@ class FEA_Block(FEA_BaseElement):
         self.blockType = blockType if blockType else None
         self.name = name if name else None
         self.content = content if content else []
-        # print((self.content))
-        # FEA_Doc.readFeaContent(FEA_Doc,self.content)
 
         self._checkType()
 
@@ -386,7 +436,6 @@ class FEA_Block(FEA_BaseElement):
         return "<FEA_Block Object type:-{}- name:-{}->".format(self.blockType, self.name)
 
     def getStr(self):
-        # print(self.content)
         if self.name:
             name = " " + self.name
         else:
@@ -414,21 +463,21 @@ if __name__ == "__main__":
     currDir = os.path.dirname(os.path.abspath(__file__))
     feaPath = currDir + "/supersimple.fea"
     
-    # feaDoc = FEA_Doc(feaPath)
-    feaDoc = FEA_Doc()
-    LC = FEA_Class(["a", "b", "c"], "LC")
-    SC = FEA_Class(["a.smcp", "b.smcp", "c.smcp"], "SC")
-    smcpFea = FEA_Block("feature","smcp")
-    smcpLC_SC = FEA_Rule("sub", 1, ["@LC"], ["@SC"], "by")
-    smcpFea.add(smcpLC_SC)
-    feaDoc.add(LC)
-    feaDoc.add(SC)
-    feaDoc.add(smcpFea)
-    print(feaDoc.getStr())
-    feaDoc.remove(SC)
-    print(feaDoc.getStr())
+    feaDoc = FEA_Doc(feaPath)
+    # feaDoc = FEA_Doc()
+    # LC = FEA_Class(["a", "b", "c"], "LC")
+    # SC = FEA_Class(["a.smcp", "b.smcp", "c.smcp"], "SC")
+    # smcpFea = FEA_Block("feature","smcp")
+    # smcpLC_SC = FEA_Rule("sub", 1, ["@LC"], ["@SC"], "by")
+    # smcpFea.add(smcpLC_SC)
+    # feaDoc.add(LC)
+    # feaDoc.add(SC)
+    # feaDoc.add(smcpFea)
+    # print(feaDoc.getStr())
+    # feaDoc.remove(SC)
+    # print(feaDoc.getStr())
     
     
 
-    print(feaDoc.saveFeaFile("a"))
+    feaDoc.saveFeaFile("test.fea")
     
