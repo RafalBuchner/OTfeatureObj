@@ -25,12 +25,10 @@ class FEA_Doc(object):
             if hasattr(el, "content"):
                 count += 1
                 for sub in el.content:
-                    # print("\t", sub, count)
                     sub.nestLevel = count
                     _deep(sub,count)
 
         if hasattr(el, "parent"):
-            # print(el, count)
             el.nestLevel = count
             _deep(el,count)
              
@@ -45,7 +43,6 @@ class FEA_Doc(object):
 
         for el in self.content:
             self._nestLevel(el,0)
-
 
     def readFeaContent(self,parent, FEAcontent):
         content = {}
@@ -94,8 +91,6 @@ class FEA_Doc(object):
                             element["contextual"],
                             element["contextual-sequence"],
                         )
-                    # for value_key in values:
-                    #     values[value_key] = int(values[value_key])
                     posRule = FEA_Rule(element["type"].split("-")[0])
                     posRule._initPOS(lookupType, targets, values, operator, isContextual, contextualSequence)
                     posRule.parent = parent
@@ -128,10 +123,26 @@ class FEA_Doc(object):
         for el in self.content:
             el.nestLevel = self._nestLevel(el,0)
 
+    def remove(self, item):
+        item.parent = self
+        self.content.remove(item)
+        for el in self.content:
+            el.nestLevel = self._nestLevel(el,0)
+
+    def pop(self,index):
+        item.parent = self
+        self.content.pop(index)
+        for el in self.content:
+            el.nestLevel = self._nestLevel(el,0)
+
+    def getStr(self):
+        fea_text = ""
+        for element in self.content:
+            fea_text += (element.getStr()+"\n")
+        return fea_text
 
     def saveFeaFile(self, path):
-        for element in self.content:
-            print(element)
+        pass
 
     def __repr__(self):
         return "<FEA_Doc Object>"
@@ -188,8 +199,10 @@ class FEA_OneLineExpression(FEA_BaseElement):
         super(FEA_BaseElement, self).__init__()
         self.name = name
         self.args = args if args else None
+
     def __repr__(self):
         return "<FEA_OnLineExpression Object name:-{}->".format(self.name)
+
     def getStr(self):
         args = ""
         for i,arg in enumerate(self.args):
@@ -401,22 +414,21 @@ if __name__ == "__main__":
     currDir = os.path.dirname(os.path.abspath(__file__))
     feaPath = currDir + "/supersimple.fea"
     
-    feaDoc = FEA_Doc(feaPath)
-    # LC = FEA_Class(["a", "b", "c"], "LC")
-    # SC = FEA_Class(["a.smcp", "b.smcp", "c.smcp"], "SC")
-    # smcpFea = FEA_Block("feature","smcp")
-    # smcpLC_SC = FEA_Rule("sub", 1, ["@LC"], ["@SC"], "by")
-    # smcpFea.add(smcpLC_SC)
-    # feaDoc.add(LC)
-    # feaDoc.add(SC)
-    # feaDoc.add(smcpFea)
+    # feaDoc = FEA_Doc(feaPath)
+    feaDoc = FEA_Doc()
+    LC = FEA_Class(["a", "b", "c"], "LC")
+    SC = FEA_Class(["a.smcp", "b.smcp", "c.smcp"], "SC")
+    smcpFea = FEA_Block("feature","smcp")
+    smcpLC_SC = FEA_Rule("sub", 1, ["@LC"], ["@SC"], "by")
+    smcpFea.add(smcpLC_SC)
+    feaDoc.add(LC)
+    feaDoc.add(SC)
+    feaDoc.add(smcpFea)
+    print(feaDoc.getStr())
+    feaDoc.remove(SC)
+    print(feaDoc.getStr())
     
     
 
-
-    for el in feaDoc.content:
-        print(el.getStr())
-
-        # print(el.parent)
-        # count = 0
-
+    print(feaDoc.saveFeaFile("a"))
+    
